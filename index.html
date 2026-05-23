@@ -6,9 +6,9 @@
 <title>Sanz Store</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,800;1,900&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
 <style>
 /* Reset and base styles */
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -491,7 +491,7 @@ tr:hover td { background: rgba(255,255,255,0.05); }
                 <div id="accounts-rows-container"></div>
                 
                 <div class="mt-4">
-                    <button class="btn w-full justify-center" onclick="submitNewProduct()" style="padding: 1rem; font-size: 1.1rem;"><i data-lucide="save" class="w-5 h-5 mr-2"></i> Publish Product Database</button>
+                    <button class="btn w-full justify-center" onclick="submitNewProduct(event)" style="padding: 1rem; font-size: 1.1rem;"><i data-lucide="save" class="w-5 h-5 mr-2"></i> Publish Product Database</button>
                 </div>
             </div>
         </div>
@@ -540,12 +540,19 @@ const firebaseConfig = {
   "appId": "1:388054171548:web:5d041352ec6b776da25259",
   "apiKey": "AIzaSyAM0GeYvvc82IRY9Lycrs1x8M8LjbC92Bc",
   "authDomain": "tera-physics-t07pf.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-3981d5da-68d7-40ff-a8e2-20fe21ccec97",
-  "storageBucket": "tera-physics-t07pf.firebasestorage.app",
+  "storageBucket": "tera-physics-t07pf.appspot.com",
   "messagingSenderId": "388054171548"
 };
-const app = firebase.initializeApp(firebaseConfig);
-const db = app.firestore(firebaseConfig.firestoreDatabaseId);
+let app;
+if (!firebase.apps.length) {
+    app = firebase.initializeApp(firebaseConfig);
+} else {
+    app = firebase.app();
+}
+const db = app.firestore();
+if (db._databaseId) {
+    db._databaseId.database = "ai-studio-3981d5da-68d7-40ff-a8e2-20fe21ccec97";
+}
 const storage = app.storage();
 
 /* ==================== GLOBAL UTILS ==================== */
@@ -583,7 +590,10 @@ function switchAdminPanel(panel) {
     document.querySelectorAll('.admin-panel').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
     document.getElementById(`panel-${panel}`).classList.add('active');
-    event.currentTarget.classList.add('active');
+    
+    const activeLink = Array.from(document.querySelectorAll('.sidebar-link')).find(el => el.getAttribute('onclick').includes(`'${panel}'`));
+    if (activeLink) activeLink.classList.add('active');
+    
     if(panel === 'dashboard') loadDashboardStats();
     if(panel === 'products') loadAdminProducts();
     if(panel === 'orders') loadAdminOrders();
@@ -815,10 +825,11 @@ async function fulfillOrder() {
         document.getElementById('order-step-3').classList.remove('hidden');
         
     } catch(e) {
-        console.error(e);
-        showToast('FATAL ERROR during transaction log bind! System halted.', 'error');
+        console.error("fulfillOrder error:", e);
+        showToast(`FATAL ERROR: ${e.message}`, 'error');
+    } finally {
+        showLoader(false);
     }
-    showLoader(false);
 }
 
 function renderTutorialSetup(prod) {
@@ -926,8 +937,12 @@ async function saveHarga(id) {
         if(isNaN(price_normal) || isNaN(price_bulk)) throw new Error('Bad numeric mapping limits.');
         await db.collection('products').doc(id).update({ price_normal, price_bulk });
         showToast('Entity constraint graph overridden parameters successfully.');
-    } catch(e) { showToast('Cloud sync constraint failed.','error'); console.error(e); }
-    showLoader(false);
+    } catch(e) { 
+        showToast(`Cloud sync constraint failed: ${e.message}`,'error'); 
+        console.error("saveHarga error:", e); 
+    } finally {
+        showLoader(false);
+    }
 }
 
 // OnSnapshot listener required for real-time order history panel (as requested in spec: all completed orders from Firestore collection orders)
@@ -1003,7 +1018,11 @@ function addAccountRow() {
 // Initial bootstrap row block sequence map generator
 addAccountRow();
 
-async function submitNewProduct() {
+async function submitNewProduct(event) {
+    if(event) event.preventDefault();
+    let btn = event ? event.currentTarget : null;
+    if(btn) btn.disabled = true;
+
     let name = document.getElementById('add-prod-name').value.trim();
     let price_normal = parseInt(document.getElementById('add-prod-price-normal').value);
     let price_bulk = parseInt(document.getElementById('add-prod-price-bulk').value);
@@ -1017,8 +1036,14 @@ async function submitNewProduct() {
         if(em && lk) accounts.push({ email: em, link: lk, sold: false, sold_at: null });
     });
     
-    if(!name || accounts.length === 0) return showToast('Empty allocation pool. Provide at least one complete node sequence mapping identity context layer log.', 'error');
-    if(isNaN(price_normal) || isNaN(price_bulk)) return showToast('System bounds mapping failure. Verify integer prices scope ranges limits.', 'error');
+    if(!name || accounts.length === 0) {
+        if(btn) btn.disabled = false;
+        return showToast('Empty allocation pool. Provide at least one complete node sequence mapping identity context layer log.', 'error');
+    }
+    if(isNaN(price_normal) || isNaN(price_bulk)) {
+        if(btn) btn.disabled = false;
+        return showToast('System bounds mapping failure. Verify integer prices scope ranges limits.', 'error');
+    }
 
     showLoader(true);
     try {
@@ -1030,11 +1055,17 @@ async function submitNewProduct() {
         } else {
             let fileInput = document.getElementById('add-prod-tut-file');
             let linkInput = document.getElementById('add-prod-tut-link');
-            if(fileInput.files.length > 0) {
-                let file = fileInput.files[0];
-                let ref = storage.ref().child(`tutorials/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`);
-                await ref.put(file);
-                tut_content = await ref.getDownloadURL();
+            if(fileInput.files && fileInput.files.length > 0) {
+                try {
+                    let file = fileInput.files[0];
+                    let ref = storage.ref().child(`tutorials/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`);
+                    await ref.put(file);
+                    tut_content = await ref.getDownloadURL();
+                } catch(uploadErr) {
+                    console.error("Storage upload error:", uploadErr);
+                    showToast(`Media upload failed: ${uploadErr.message}. Product will be saved without media.`, 'error');
+                    tut_content = "";
+                }
             } else if(tut_type === 'video' && linkInput.value.trim() !== '') {
                 tut_content = linkInput.value.trim();
             } else {
@@ -1042,23 +1073,34 @@ async function submitNewProduct() {
             }
         }
         
-        // Define root constraint graph doc mappings limit blocks sequences sets
+        // Reminder: Set Firestore rules to allow read and write during development!
         let prodData = {
-            name, price_normal, price_bulk, stock: accounts.length,
+            name, price_normal, price_bulk, stock: 0,
             tutorial_type: tut_type, tutorial_content: tut_content,
             created_at: firebase.firestore.FieldValue.serverTimestamp()
         };
         const prodRef = await db.collection('products').add(prodData);
         
-        // Inject recursive sub-dependencies batch
-        let batch = db.batch();
-        accounts.forEach(acc => {
-            let accRef = db.collection('products').doc(prodRef.id).collection('accounts').doc();
-            batch.set(accRef, acc);
-        });
-        await batch.commit();
+        let successCount = 0;
+        // Inject recursive sub-dependencies sequentially
+        for(let i=0; i<accounts.length; i++) {
+            try {
+                await db.collection('products').doc(prodRef.id).collection('accounts').add(accounts[i]);
+                successCount++;
+            } catch(accErr) {
+                console.error("Failed to add account:", accounts[i], accErr);
+                showToast(`Failed to add account ${accounts[i].email}: ${accErr.message}`, 'error');
+            }
+        }
+
+        try {
+            await db.collection('products').doc(prodRef.id).update({ stock: successCount });
+        } catch(updErr) {
+            console.error("Stock update failed:", updErr);
+            showToast(`Failed to update product stock: ${updErr.message}`, 'error');
+        }
         
-        showToast('Operation published entity node logic successfully.');
+        showToast(`Operation published entity node logic successfully with ${successCount} items.`);
         
         // Reset mapping parameters blocks array list context inputs variables
         document.getElementById('add-prod-name').value = '';
@@ -1071,10 +1113,12 @@ async function submitNewProduct() {
         // Auto-navigate bounds block
         switchAdminPanel('products');
     } catch(e) {
-        showToast(e.message || 'Fatal save sequence mapping scope boundaries logs bounds override context logic index mapping log log bounds overrides mapping ranges scope array arrays limits string params mapping logic list logic block limits sets node failure', 'error');
-        console.error(e);
+        showToast(e.message || 'Fatal save sequence mapping', 'error');
+        console.error("submitNewProduct error:", e);
+    } finally {
+        showLoader(false);
+        if(btn) btn.disabled = false;
     }
-    showLoader(false);
 }
 
 // Ensure init execution after DOM
