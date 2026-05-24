@@ -320,7 +320,7 @@ nav {
 
 <div id="app-container">
     <nav>
-        <div class="nav-logo" onclick="navigate('storefront')">
+        <div class="nav-logo" onclick="handleLogoClick()">
             <i data-lucide="store" style="color: #7c3aed;"></i>
             <span class="gradient-text">Sanz Store</span>
         </div>
@@ -341,24 +341,17 @@ nav {
             </div>
             <form onsubmit="handleUserLogin(event)" id="login-form">
                 <div class="input-wrap">
-                    <i data-lucide="mail"></i>
-                    <input type="email" id="log-email" class="input" placeholder="Email" required>
+                    <i data-lucide="at-sign"></i>
+                    <input type="text" id="log-user" class="input" placeholder="Username" required>
                 </div>
                 <div class="input-wrap">
-                    <i data-lucide="key"></i>
+                    <i data-lucide="lock"></i>
                     <input type="password" id="log-pass" class="input" placeholder="Password" required>
                     <button type="button" style="position:absolute; right:16px; top:12px; background:none; border:none; color:rgba(255,255,255,0.5); cursor:pointer;" onclick="togglePass('log-pass', this)"><i data-lucide="eye"></i></button>
                 </div>
                 <button type="submit" class="btn btn-primary w-full mt-4" id="btn-login-submit">Masuk</button>
             </form>
             <p class="text-center mt-4" style="font-size: 0.9rem;">Belum punya akun? <span class="gradient-text pointer" onclick="navigate('register')">Daftar</span></p>
-            
-            <div class="divider"></div>
-            <p class="text-center mb-4" style="color: rgba(255,255,255,0.4); font-size: 0.8rem; font-weight: 600;">OR</p>
-            
-            <button class="btn btn-secondary w-full" onclick="showModal('admin-login-modal')">
-                <i data-lucide="shield"></i> Login sebagai Admin
-            </button>
         </div>
     </div>
 
@@ -377,18 +370,13 @@ nav {
                 </div>
                 <div class="input-wrap">
                     <i data-lucide="at-sign"></i>
-                    <input type="text" id="reg-user" class="input" placeholder="Username (tanpa spasi)">
-                    <span class="error-text hidden" id="err-reg-user">Username tidak valid</span>
+                    <input type="text" id="reg-user" class="input" placeholder="Username">
+                    <span class="error-text hidden" id="err-reg-user">Username tidak valid. Gunakan huruf angka dan underscore saja.</span>
                 </div>
                 <div class="input-wrap">
                     <i data-lucide="phone"></i>
                     <input type="number" id="reg-wa" class="input" placeholder="WhatsApp Number">
                     <span class="error-text hidden" id="err-reg-wa">Nomor WA minimal 10 digit</span>
-                </div>
-                <div class="input-wrap">
-                    <i data-lucide="mail"></i>
-                    <input type="email" id="reg-email" class="input" placeholder="Email">
-                    <span class="error-text hidden" id="err-reg-email">Format email tidak valid</span>
                 </div>
                 <div class="input-wrap">
                     <i data-lucide="lock"></i>
@@ -401,6 +389,7 @@ nav {
                 <div class="input-wrap">
                     <i data-lucide="lock"></i>
                     <input type="password" id="reg-pass-conf" class="input" placeholder="Konfirmasi Password" onkeyup="checkMatch()">
+                    <button type="button" style="position:absolute; right:40px; top:12px; background:none; border:none; color:rgba(255,255,255,0.5); cursor:pointer;" onclick="togglePass('reg-pass-conf', this)"><i data-lucide="eye"></i></button>
                     <i data-lucide="check" id="match-icon" style="position:absolute; right:16px; top:14px; color:#10b981; display:none;"></i>
                 </div>
                 <span class="error-text hidden" id="err-reg-pass-conf">Password tidak cocok</span>
@@ -453,9 +442,8 @@ nav {
             </div>
             
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 32px;" id="prof-info-cards">
-                <div class="glass" style="padding: 16px;"><i data-lucide="mail" style="color:#7c3aed; margin-bottom:8px;"></i><p style="font-size:0.8rem; color:rgba(255,255,255,0.5);">Email</p><p id="prof-email-val" style="font-weight:600; word-break:break-all;"></p></div>
-                <div class="glass" style="padding: 16px;"><i data-lucide="phone" style="color:#ec4899; margin-bottom:8px;"></i><p style="font-size:0.8rem; color:rgba(255,255,255,0.5);">WhatsApp</p><p id="prof-wa-val" style="font-weight:600;"></p></div>
                 <div class="glass" style="padding: 16px;"><i data-lucide="at-sign" style="color:#06b6d4; margin-bottom:8px;"></i><p style="font-size:0.8rem; color:rgba(255,255,255,0.5);">Username</p><p id="prof-user-val" style="font-weight:600;"></p></div>
+                <div class="glass" style="padding: 16px;"><i data-lucide="phone" style="color:#ec4899; margin-bottom:8px;"></i><p style="font-size:0.8rem; color:rgba(255,255,255,0.5);">WhatsApp</p><p id="prof-wa-val" style="font-weight:600;"></p></div>
                 <div class="glass" style="padding: 16px;"><i data-lucide="shield" style="color:#10b981; margin-bottom:8px;"></i><p style="font-size:0.8rem; color:rgba(255,255,255,0.5);">Role</p><p id="prof-role-val" style="font-weight:600;"></p></div>
             </div>
 
@@ -708,7 +696,7 @@ nav {
             </div>
             <div class="input-wrap">
                 <i data-lucide="phone"></i>
-                <input type="text" id="om-contact" class="input" placeholder="WhatsApp / Email">
+                <input type="text" id="om-contact" class="input" placeholder="WhatsApp / Username">
             </div>
 
             <button class="btn btn-primary w-full mt-2" onclick="startPayment()"><i data-lucide="qr-code"></i> Bayar via QRIS</button>
@@ -811,17 +799,87 @@ nav {
 <script>
 /* ================= FIREBASE INIT ================= */
 const firebaseConfig = {
-  projectId: "tera-physics-t07pf",
-  appId: "1:388054171548:web:5d041352ec6b776da25259",
-  apiKey: "AIzaSyAM0GeYvvc82IRY9Lycrs1x8M8LjbC92Bc",
-  authDomain: "tera-physics-t07pf.firebaseapp.com",
-  storageBucket: "tera-physics-t07pf.appspot.com"
+  apiKey: "AIzaSyBEOjUp-0OYXYTs5ZprQbXQ16ULxBbFZfU",
+  authDomain: "sanz-store-v2.firebaseapp.com",
+  projectId: "sanz-store-v2",
+  storageBucket: "sanz-store-v2.firebasestorage.app",
+  messagingSenderId: "721334790096",
+  appId: "1:721334790096:web:f9dcd3ab8ff6ee2503fbd5",
+  measurementId: "G-EZK9TNRL4D"
 };
+
+// Error handling & Connectivity Flag
+let isFirestoreAvailable = false;
+let isFirebaseVerified = false;
+
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-if (db._databaseId) db._databaseId.database = "ai-studio-3981d5da-68d7-40ff-a8e2-20fe21ccec97";
+const originalDb = firebase.firestore();
 const auth = firebase.auth();
 const storage = firebase.storage();
+
+/* ================= FIREBASE VALIDATION ================= */
+async function verifyFirebaseConnection() {
+    if (isFirebaseVerified) return isFirestoreAvailable;
+    try {
+        if (!firebase.apps.length) throw new Error("Firebase App Not Initialized");
+        // Verify database existence with a dummy read
+        await originalDb.collection('_setup_check').doc('1').get();
+        isFirestoreAvailable = true;
+    } catch (error) {
+        if (error.code === 'not-found' || (error.message && error.message.includes('not-found'))) {
+            console.warn("⚠️ Firestore Database not found or inactive. Entering safe mode.", error);
+            showErrorToast("Database Firestore tidak ditemukan. Fitur database dimatikan.");
+        } else if (error.code === 'permission-denied') {
+            // Still active, just permission denied
+            isFirestoreAvailable = true;
+        } else if (error.code === 'unavailable') {
+            console.warn("⚠️ Firestore is unavailable. Offline mode or connection issues.", error);
+            isFirestoreAvailable = true; // Can operate offline potentially
+        } else {
+            console.error("Firebase Verification Error:", error);
+            showErrorToast("Gagal terhubung ke database.");
+            isFirestoreAvailable = false;
+        }
+    }
+    isFirebaseVerified = true;
+    return isFirestoreAvailable;
+}
+
+// Proxied DB for safe usage
+const db = {
+    collection: function(path) {
+        if (isFirebaseVerified && !isFirestoreAvailable) {
+            console.warn(`[SafeMode] Ignored DB request to /${path}`);
+            return _createMockCollection(path);
+        }
+        return originalDb.collection(path);
+    },
+    batch: function() {
+        if (isFirebaseVerified && !isFirestoreAvailable) {
+            return { update: () => {}, set: () => {}, delete: () => {}, commit: () => Promise.resolve() };
+        }
+        return originalDb.batch();
+    }
+};
+
+function _createMockCollection(path) {
+    return {
+        doc: (id) => ({
+            get: () => Promise.resolve({ exists: false, data: () => ({}), id: id || 'mock-id' }),
+            set: () => Promise.resolve(),
+            update: () => Promise.resolve(),
+            delete: () => Promise.resolve(),
+            collection: (sub) => _createMockCollection(`${path}/${id}/${sub}`)
+        }),
+        get: () => Promise.resolve({ docs: [], size: 0, empty: true, forEach: () => {} }),
+        where: () => _createMockCollection(path),
+        orderBy: () => _createMockCollection(path),
+        limit: () => _createMockCollection(path),
+        onSnapshot: (cb) => { setTimeout(() => cb({ docs: [], size: 0, empty: true, forEach: () => {} }), 0); return () => {}; },
+        add: () => Promise.resolve({ id: 'mock-id' })
+    };
+}
+
 
 /* ================= GLOBALS ================= */
 lucide.createIcons();
@@ -863,12 +921,33 @@ function showModal(id) { document.getElementById(id).classList.add('active'); lu
 function hideModal(id) { document.getElementById(id).classList.remove('active'); }
 
 /* ================= NAV & ROUTES ================= */
+let logoClickCount = 0;
+let logoClickTimer = null;
+
+function handleLogoClick() {
+  logoClickCount++;
+  if (logoClickTimer) clearTimeout(logoClickTimer);
+  logoClickTimer = setTimeout(() => {
+    if (logoClickCount >= 3) {
+      showModal('admin-login-modal');
+      showToast('Mode Admin diaktifkan', 'info');
+    } else {
+      navigate('storefront');
+    }
+    logoClickCount = 0;
+  }, 800);
+}
+
 function navigate(view) {
-    document.querySelectorAll('.view').forEach(v => { v.classList.remove('active'); setTimeout(()=>v.style.display='none', 400); });
-    setTimeout(() => {
-        document.getElementById('view-'+view).style.display = 'block';
-        setTimeout(() => { document.getElementById('view-'+view).classList.add('active'); }, 50);
-    }, 400);
+    document.querySelectorAll('.view').forEach(v => {
+        v.style.display = 'none';
+        v.classList.remove('active');
+    });
+    const target = document.getElementById('view-' + view);
+    if(target) {
+        target.style.display = 'block';
+        setTimeout(() => { target.classList.add('active'); }, 50);
+    }
     currentView = view;
     if(view === 'storefront') loadStorefront();
     if(view === 'history') loadHistory();
@@ -906,7 +985,14 @@ document.addEventListener('click', (e) => {
 });
 
 /* ================= INITIAL LOAD ================= */
+window.addEventListener('load', async () => {
+    // Check db connectivity to prevent crash
+    await verifyFirebaseConnection();
+    if(!document.querySelector('.view.active')) navigate('storefront');
+});
+
 auth.onAuthStateChanged(async (user) => {
+    await verifyFirebaseConnection();
     if (user) {
         currentUser = user;
         try {
@@ -918,12 +1004,19 @@ auth.onAuthStateChanged(async (user) => {
                 currentUser.whatsapp = d.whatsapp;
                 currentUser.username = d.username;
                 currentRole = d.role;
+                console.log("User loaded:", currentRole);
             }
         } catch(e) {}
         updateNav();
-        if(currentView === 'login' || currentView === 'register' || currentView === '') {
-            if(currentRole === 'admin') { navigate('admin'); switchAdmin('dashboard'); }
-            else navigate('storefront');
+        
+        let curView = document.querySelector('.view.active')?.id.replace('view-', '') || currentView;
+        if(curView === 'login' || curView === 'register' || curView === '') {
+            if(currentRole === 'admin') { 
+                navigate('admin'); 
+                switchAdmin('dashboard'); 
+            } else { 
+                navigate('storefront'); 
+            }
         }
     } else {
         currentUser = null; currentRole = null;
@@ -965,46 +1058,51 @@ async function handleRegister(e) {
     let n=document.getElementById('reg-name').value.trim();
     let u=document.getElementById('reg-user').value.trim();
     let w=document.getElementById('reg-wa').value.trim();
-    let em=document.getElementById('reg-email').value.trim();
     let p1=document.getElementById('reg-pass').value;
     let p2=document.getElementById('reg-pass-conf').value;
     
     let valid=true;
     if(!n) { showError('reg-name', true); valid=false; } else showError('reg-name', false);
-    if(!u || u.includes(' ')) { showError('reg-user', true); valid=false; } else showError('reg-user', false);
+    const userRegex = /^[a-zA-Z0-9_]+$/;
+    if(!u || !userRegex.test(u)) { showError('reg-user', true); valid=false; } else showError('reg-user', false);
     if(!w || isNaN(w) || w.length<10) { showError('reg-wa', true); valid=false; } else showError('reg-wa', false);
-    if(!em || !em.includes('@')) { showError('reg-email', true); valid=false; } else showError('reg-email', false);
     if(p1.length<8) { showError('reg-pass', true); valid=false; } else showError('reg-pass', false);
     if(p1!==p2) { showError('reg-pass-conf', true); valid=false; } else showError('reg-pass-conf', false);
     
     if(!valid) return;
     
+    let generatedEmail = u + '@sanzstore.user';
+    
     let btn = document.getElementById('btn-reg-submit'); btn.disabled=true;
     showLoader("Membuat akun...");
     try {
-        const cred = await auth.createUserWithEmailAndPassword(em, p1);
+        const cred = await auth.createUserWithEmailAndPassword(generatedEmail, p1);
         await db.collection('users').doc(cred.user.uid).set({
-            fullName: n, username: u, whatsapp: w, email: em, uid: cred.user.uid, role: 'user',
+            fullName: n, username: u, whatsapp: w, email: generatedEmail, uid: cred.user.uid, role: 'user',
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        showToast('Akun berhasil dibuat', 'success');
+        showToast('Akun berhasil dibuat! Silakan login.', 'success');
         document.getElementById('register-form').reset();
+        navigate('login');
     } catch(err) {
+        console.error("Registration error:", err);
         showToast(err.message, 'error');
     } finally { btn.disabled=false; hideLoader(); }
 }
 
 async function handleUserLogin(e) {
     e.preventDefault();
-    let em = document.getElementById('log-email').value;
+    let user = document.getElementById('log-user').value.trim();
     let pw = document.getElementById('log-pass').value;
     let btn = document.getElementById('btn-login-submit'); btn.disabled=true;
+    let generatedEmail = user + '@sanzstore.user';
     showLoader("Masuk...");
     try {
-        await auth.signInWithEmailAndPassword(em, pw);
+        await auth.signInWithEmailAndPassword(generatedEmail, pw);
         document.getElementById('login-form').reset();
     } catch(err) {
-        showToast("Login gagal. Periksa email dan password.", 'error');
+        console.error("Login error:", err);
+        showToast("Username atau password salah. Periksa kembali.", 'error');
     } finally { btn.disabled=false; hideLoader(); }
 }
 
@@ -1265,7 +1363,6 @@ function loadProfileView() {
     document.getElementById('prof-name').innerText = currentUser.fullName || 'User';
     document.getElementById('prof-user').innerText = '@' + (currentUser.username || 'user');
     
-    document.getElementById('prof-email-val').innerText = currentUser.email || '-';
     document.getElementById('prof-wa-val').innerText = currentUser.whatsapp || '-';
     document.getElementById('prof-user-val').innerText = currentUser.username || '-';
     let isA = currentRole==='admin';
